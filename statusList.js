@@ -1,8 +1,8 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
-const { prefix, token } = require('./config/config.json');
+const { prefix, token, roleId } = require('./config/config.json');
 let members = [];
-let a, b, c = '';
+let showName, showPlan, showTime, lostName= '';
 //let key = Object.keys(members);
 
 client.once('ready', () => {
@@ -17,8 +17,10 @@ client.on('message', message => {
 
     if (command === 'newmember'){
         if ( !members.length ){
+            
+            //console.log(message.member._roles);
             members.push({id: message.author.id, name: message.author.username, plan: undefined, update_time: message.createdAt});
-            return message.channel.send(`はじめまして${message.author.username}さん`);
+            return message.channel.send(`はじめまして${message.author.username}さん`);       
         }
 
         for (let i = 0; i < members.length; i++){
@@ -27,7 +29,7 @@ client.on('message', message => {
             }
         }
 
-        members.push({id: message.author.id, name: message.author.username, plan: undefined, update_time: message.createdAt});
+        members.push({id: message.author.id, name: message.author.username, plan: undefined, update_time: message.createdTimestamp});
         return message.channel.send(`はじめまして${message.author.username}さん`);
         
     }else if( command === 'plan') {
@@ -50,16 +52,32 @@ client.on('message', message => {
         }else {
             message.channel.send('私が把握している予定はこちらになります');
             for (let i = 0; i < members.length; i++){
-                a = members[i].name;
-                b = members[i].plan;
-                c = members[i].update_time
-                message.channel.send('-----------------------------------');
-                message.channel.send(`${a}\n schedule: ${b}\n update_time: ${c}`);
+                showName = members[i].name;
+                showPlan = members[i].plan;
+                showTime = members[i].update_time
+
+                message.channel.send(`${showName}\n schedule: ${showPlan}\n update_time: ${showTime}`);
                 //message.channel.send(`${members[i].name}\n schedule: ${members[i].plan}\n update_time: ${members[i].update_time}`);
-                message.channel.send('-----------------------------------');
+                message.channel.send('----------------------------------------------------');
             }
             return message.channel.send('皆さんの予定を把握できましたか？');
         }
+    }else if (command === 'del'){ 
+        if (roleId !== `${message.member._roles}`){
+            return message.channel.send('あなたにその権限はありません');
+        }else if (!args.length){
+            return message.channel.send('削除する人を指定してください');
+        }
+
+        for (let i = 0; i < members.length; i++){
+            if(members[i].name  === `${args}`|| members[i].id === `${args}`){
+                lostName = members[i].name;
+                members.splice(i, 1);
+                return message.channel.send(`${lostName}さんの記録を削除しました......`);
+            }
+        }
+        
+        return message.channel.send('その人はいません、誰かと間違えているのでは？');
     }
 });
 
