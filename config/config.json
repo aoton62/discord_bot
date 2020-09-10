@@ -1,4 +1,5 @@
 {
     "prefix": "!",
-    "token": "your token"
+    "token": "your token",
+    "roleId": "your role_id"
 }
