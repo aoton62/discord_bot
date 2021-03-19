@@ -1,23 +1,34 @@
+// Response for Uptime Robot
+const http = require('http');
+http.createServer(function(request, response)
+{
+  response.writeHead(200, {'Content-Type': 'text/plain'});
+  response.end('Discord bot is active now \n');
+}).listen(3000)
+
+
+
 const Discord = require('discord.js');
 const client = new Discord.Client();
-const { prefix, token, roleId } = require('./config/config.json');
 let members = [];
-let showName, showPlan, showTime, lostName= '';
+let showName, showPlan, showTime, lostName, searchName, japanStandardTime= '';
+
 
 client.once('ready', () => {
     console.log('Ready!');
 });
 
 client.on('message', message => {
-    if (!message.content.startsWith(prefix) || message.author.bot) return;
+    if (!message.content.startsWith(process.env.prefix) || message.author.bot) return;
 
-    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const args = message.content.slice(process.env.prefix.length).trim().split(/ +/);
     const command = args.shift().toLocaleLowerCase();
 
     if (command === 'newmember'){
         if ( !members.length ){
-            members.push({id: message.author.id, name: message.author.username, plan: undefined, update_time: message.createdAt});
-            return message.channel.send(`はじめまして${message.author.username}さん`);       
+            japanStandardTime = new Date(Date.now() + ((new Date().getTimezoneOffset() + (9 * 60)) * 60 * 1000));
+            members.push({id: message.author.id, name: message.author.username, plan: undefined, update_time: japanStandardTime});
+            return message.channel.send(`はじめまして${message.author.username}さん`);
         }
 
         for (let i = 0; i < members.length; i++){
@@ -25,10 +36,10 @@ client.on('message', message => {
                 return message.channel.send(`${message.author.username}さん、あなたのことは知っていますよ`);
             }
         }
-
-        members.push({id: message.author.id, name: message.author.username, plan: undefined, update_time: message.createdAt});
+        japanStandardTime = new Date(Date.now() + ((new Date().getTimezoneOffset() + (9 * 60)) * 60 * 1000));
+        members.push({id: message.author.id, name: message.author.username, plan: undefined, update_time: japanStandardTime});
         return message.channel.send(`はじめまして${message.author.username}さん`);
-        
+
     }else if (command === 'plan'){
         if (!members.length){
             return message.channel.send('あなたは誰ですか？まずあなたのことを教えて下さい');
@@ -40,9 +51,10 @@ client.on('message', message => {
 
         for (let i = 0; i < members.length; i++){
             if( members[i].id === message.author.id ){
+                japanStandardTime = new Date(Date.now() + ((new Date().getTimezoneOffset() + (9 * 60)) * 60 * 1000));
                 members[i].name = message.author.username;
                 members[i].plan = args;
-                members[i].update_time = message.createdAt;
+                members[i].update_time = japanStandardTime;
                 return message.channel.send(`${message.author.username}さん、あなたの予定を把握しました`);
             }
         }
@@ -52,9 +64,10 @@ client.on('message', message => {
     }else if (command === 'plandel'){
         for (let i = 0; i < members.length; i++){
             if( members[i].id === message.author.id ){
+                japanStandardTime = new Date(Date.now() + ((new Date().getTimezoneOffset() + (9 * 60)) * 60 * 1000));
                 members[i].name = message.author.username;
                 members[i].plan = '';
-                members[i].update_time = message.createdAt;
+                members[i].update_time = japanStandardTime;
                 return message.channel.send('あなたの予定を削除しました');
             }
         }
@@ -89,8 +102,8 @@ client.on('message', message => {
             }
             return message.channel.send('皆さんの予定を把握できましたか？');
         }
-    }else if (command === 'del'){ 
-        if (roleId !== `${message.member._roles}`){
+    }else if (command === 'del'){
+        if (process.env.roleId !== `${message.member._roles}`){
             return message.channel.send('あなたにその権限はありません');
         }else if (!args.length){
             return message.channel.send('削除する人を指定してください');
@@ -103,9 +116,9 @@ client.on('message', message => {
                 return message.channel.send(`${lostName}さんの記録を削除しました......`);
             }
         }
-        
+
         return message.channel.send('その人はいません、誰かと間違えているのでは？');
     }
 });
 
-client.login(token);
+client.login(process.env.DISCORD_BOT_TOKEN);
